@@ -1,0 +1,110 @@
+import pygame
+import random
+
+# --- Game Constants ---
+BOARD_SIZE = 8  # 8x8 board
+CELL_SIZE = 50  # Size of each cell
+SCREEN_WIDTH = BOARD_SIZE * CELL_SIZE
+SCREEN_HEIGHT = BOARD_SIZE * CELL_SIZE
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+# --- Quotes and Speakers ---
+quotes = [
+    ("“Freedom to and freedom from”", "Aunt Lydia"),
+    ("“Give me children or else I die”", "Offred quoting bible"),
+    ("“Ignoring isn’t the same as ignorance, you have to work at it”", "Offred"),
+    ("“It would be like shouting, it would be like shooting someone”", "Offred"),
+    ("“Sanity is a valuable possession”", "Offred"),
+    ("“Power and conflict are central to the society of Gilead although its political and economic structures are never clearly demarcated”", "Grotsch-Thompson"),
+    ("“Despite - or perhaps because of - the destruction of the natural environment, Gilead adapts the rhetoric of the natural to authenticate its reign”", "Rule"),
+    ("“The monthly rape ‘Ceremony’… synthesises the institutionalised humiliation, objectification and ownership of women in Gilead”", "Cavalcanti"),
+    ("“I’ve got to be good and keep my hands off children”", "Blanche"),
+    ("“Streetcar named desire, transfer to one called cemeteries and get off at Elysian Fields”", "Blanche"),
+    ("“I have always depended on the kindness of strangers”", "Blanche"),
+    ("“Temperature 100 on the nose, and she soaks herself in the hot tub”", "Stanley"),
+    ("“Deliberate cruelty is not forgivable. It is the one thing of which I have never been guilty “", "Blanche"),
+    ("“Blanche is like all women, dependent on a man, looking for one to hang on to: only more so!”", "Kazan"),
+    ("“Sanity is dependent on fitting in and adhering to the social roles expected of us”", "Kirby"),
+    ("“Blanche is a delicate and sensitive woman pushed into insanity by British environment presided over by chief ape-man Stanley Kowalski”", "Clurman")
+]
+
+# --- Snakes and Ladders ---
+snakes = {
+    12: 3,
+    25: 10,
+    36: 18
+}
+ladders = {
+    1: 15,
+    5: 22,
+    28: 40
+}
+
+# --- Game Variables ---
+player_positions = [0, 0]  # Positions of two players
+current_player = 0  # Player's turn
+game_over = False
+font = pygame.font.Font(None, 24)
+
+# --- Game Initialization ---
+pygame.init()
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Quote Snake and Ladders")
+
+# --- Function to Draw the Board ---
+def draw_board():
+  screen.fill(WHITE)
+  for row in range(BOARD_SIZE):
+    for col in range(BOARD_SIZE):
+      cell_rect = pygame.Rect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+      pygame.draw.rect(screen, BLACK, cell_rect, 1)
+      if (row * BOARD_SIZE + col) < len(quotes):
+        quote_text = font.render(quotes[row * BOARD_SIZE + col][0], True, BLACK)
+        text_rect = quote_text.get_rect(center=cell_rect.center)
+        screen.blit(quote_text, text_rect)
+
+# --- Function to Draw Player Pieces ---
+def draw_player_pieces():
+  for player in range(2):
+    player_x = (player_positions[player] % BOARD_SIZE) * CELL_SIZE + CELL_SIZE // 2
+    player_y = (player_positions[player] // BOARD_SIZE) * CELL_SIZE + CELL_SIZE // 2
+    pygame.draw.circle(screen, (255, 0, 0) if player == 0 else (0, 0, 255), (player_x, player_y), CELL_SIZE // 4)
+
+# --- Function to Handle Player Turn ---
+def handle_player_turn():
+  global current_player, player_positions, game_over
+  dice_roll = random.randint(1, 6)
+  player_positions[current_player] = move_player(player_positions[current_player], dice_roll)
+  player_positions[current_player] = check_for_snakes_ladders(player_positions[current_player])
+  if player_positions[current_player] == BOARD_SIZE * BOARD_SIZE - 1:
+    game_over = True
+  else:
+    quote_index = player_positions[current_player]
+    if quote_index < len(quotes):
+      quote_text, speaker = quotes[quote_index]
+      # ... (Ask the player who said the quote using a separate function)
+      # ... (Handle the answer and proceed accordingly)
+  current_player = (current_player + 1) % 2
+
+# --- Main Game Loop ---
+running = True
+while running:
+  for event in pygame.event.get():
+    if event.type == pygame.QUIT:
+      running = False
+    if event.type == pygame.KEYDOWN:
+      if event.key == pygame.K_SPACE and not game_over:
+        handle_player_turn()
+
+  draw_board()
+  draw_player_pieces()
+
+  if game_over:
+    winner = current_player
+    winner_text = font.render(f"Player {winner + 1} Wins!", True, BLACK)
+    screen.blit(winner_text, (SCREEN_WIDTH // 2 - winner_text.get_width() // 2, SCREEN_HEIGHT // 2 - winner_text.get_height() // 2))
+
+  pygame.display.flip()
+
+pygame.quit()
